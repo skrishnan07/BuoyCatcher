@@ -8,10 +8,12 @@ package buoy;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
+import java.util.Comparator;
 
 /**
  *
- * @author Shankar Krishnan A specific property describing a weather condition
+ * @author Shankar Krishnan 
+ * A specific property describing a weather condition
  * at a buoy
  */
 public class WeatherCondition implements Serializable
@@ -93,6 +95,23 @@ public class WeatherCondition implements Serializable
     public void removePropertyChangeListener(PropertyChangeListener listener)
     {
         propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+    
+     // Add a comparator
+    public static class NameComparator implements Comparator<WeatherCondition>
+    {
+
+        @Override
+        public int compare(WeatherCondition o1, WeatherCondition o2)
+        {
+            if (null == o1 || null == o2)
+            {
+                return 1;
+            } else
+            {
+                return o1.getName().compareTo(o2.getName());
+            }
+        }
     }
 
 }

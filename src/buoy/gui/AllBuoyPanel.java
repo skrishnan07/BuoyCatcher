@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  *
- * @author Sanjana
+ * @author Shankar Krishnan
  */
 public class AllBuoyPanel extends BuoyPanel
 {

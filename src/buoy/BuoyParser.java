@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 
 /**
  *
- * @author Shankar Krishnan Contains utilities to parse the buoy data obtained
+ * @author Shankar Krishnan
+ * Contains utilities to parse the buoy data obtained
  * from the RSS Feed
  */
 public class BuoyParser
@@ -53,7 +54,12 @@ public class BuoyParser
         {
 
             // Extract station ID, Full Name and URL link
-            buoy = new Buoy(title, extractStationID(title));
+            
+            //String stationID = extractStationID(title);
+            //String name = extractName(title, StationID);
+            
+            //buoy = new Buoy(title, stationID);
+            buoy = createBuoy(title);
             buoy.setLinkURL(link);
 
             // Extract Data Fields by parsing the HTML Description
@@ -119,7 +125,34 @@ public class BuoyParser
         {
             return title;
         }
+    }
+    
+    
+    
+    public  Buoy createBuoy(String title)
+    {
+        String stationID = "";
+        String name = "";
+        
+        String regexp = "^(.+?)-";
+        Pattern pat = Pattern.compile(regexp);
+        Matcher match = pat.matcher(title);
 
+        if (match.find())
+        {
+            stationID =  match.group();
+            
+            name = title.substring(title.
+                    indexOf(stationID) + stationID.length(), title.length()).trim();
+            stationID =  stationID.replace("-", "").trim();
+        } else
+        {
+            stationID = title;
+            name = title;
+        }
+        
+        Buoy buoy = new Buoy(stationID, name);
+        return buoy;
     }
 
     /**

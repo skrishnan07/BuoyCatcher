@@ -8,9 +8,14 @@ package buoy;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -43,9 +48,13 @@ public class Buoy implements Serializable
     // Maintained as a dynamic collection because different buoys report different data
     private TreeMap<String, WeatherCondition> conditions = new TreeMap<>();
 
-    Buoy(String title, String id)
+    // Other class data
+    //relative distance from point of search
+    private int distance = 0;
+
+    Buoy(String id, String name)
     {
-        name = title;
+        this.name = name;
         stationID = id;
 
     }
@@ -114,6 +123,19 @@ public class Buoy implements Serializable
         String oldRelativeLocation = this.relativeLocation;
         this.relativeLocation = relativeLocation;
         propertyChangeSupport.firePropertyChange(PROP_RELATIVELOCATION, oldRelativeLocation, relativeLocation);
+
+        Pattern p = Pattern.compile("-?\\d+");
+        Matcher m = p.matcher(relativeLocation);
+        if (m.find())
+        {
+            try
+            {
+                distance = Integer.parseInt(m.group(0));
+            } catch (Exception ex)
+            {
+                distance = 0;
+            }
+        }
     }
 
     /**
@@ -222,20 +244,19 @@ public class Buoy implements Serializable
         sb.append(">\n");
         sb.append("Location: <");
         sb.append(latlong);
-        
+
         sb.append(">, Relative to Search Location: <");
         sb.append(relativeLocation);
-        
+
         sb.append(">\n");
 
         sb.append("Report Time: <");
         sb.append(reportTime);
         sb.append(">\n\n");
-        
-        
-        Collection <WeatherCondition> data = conditions.values();
-        
-        for(WeatherCondition wc : data)
+
+        Collection<WeatherCondition> data = conditions.values();
+
+        for (WeatherCondition wc : data)
         {
             sb.append(wc.getName());
             sb.append(": <");
@@ -253,7 +274,20 @@ public class Buoy implements Serializable
         conditions.put(tag, wc);
     }
 
-    // Add a comparator
+    public List<WeatherCondition> getConditions()
+    {
+        Collection<WeatherCondition> col = null;
+        col = conditions.values();
+
+        ArrayList<WeatherCondition> listConditions = new ArrayList<>(col);
+        Collections.sort(listConditions, new WeatherCondition.NameComparator());
+
+        return listConditions;
+    }
+
+    /**
+     * An ID Comparator Inner Class to sort Buoys Alphabetically by Station IDs
+     */
     public static class IDComparator implements Comparator<Buoy>
     {
 
@@ -268,5 +302,36 @@ public class Buoy implements Serializable
                 return o1.getStationID().compareTo(o2.getStationID());
             }
         }
+    }
+
+    // Add a comparator
+    public static class DistanceComparator implements Comparator<Buoy>
+    {
+
+        @Override
+        public int compare(Buoy o1, Buoy o2)
+        {
+            if (null == o1 || null == o2)
+            {
+                return 1;
+            } else
+            {
+                int result = Integer.compare(o1.distance,  o2.distance);
+                if ( result == 0 )
+                {
+                    return o1.relativeLocation.compareTo(o2.relativeLocation);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+        }
+    }
+
+
+public int getRelativeDistance()
+    {
+        return distance;
     }
 }

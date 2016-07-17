@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  *
- * @author Sanjana
+ * @author Shankar Krishnan
  */
 public class FavoriteBuoysPanel extends BuoyPanel
 {

@@ -7,25 +7,40 @@ package buoy.gui;
 
 import buoy.Buoy;
 import buoy.BuoyCatcher;
+import buoy.WeatherCondition;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JTable;
 
 /**
  *
- * @author Sanjana
+ * @author Shankar Krishnan
  */
 public class BuoyPanel extends javax.swing.JPanel
 {
+    
+    protected  PropertyChangeSupport propertyChangeSupport;
+    protected  BuoyCatcherDialog buoyCatcherDialog = null;
 
+   
     /**
      * Creates new form FavoritesPanel
+     * Set row selection settings to allow single row selections
      */
     public BuoyPanel()
     {
+       
         initComponents();
+        fixTblSelectionModel(tableBuoys);
+        fixTblSelectionModel(tableConditions);
         
+    }
+    
+    public void setBuoyCatcherDialog(BuoyCatcherDialog bcDlg)
+    {
+        buoyCatcherDialog = bcDlg;
     }
 
     /**
@@ -46,7 +61,7 @@ public class BuoyPanel extends javax.swing.JPanel
         jScrollPane2 = new javax.swing.JScrollPane();
         tableConditions = new javax.swing.JTable();
         btnFavorite = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
+        lblReportTime = new javax.swing.JLabel();
 
         tableBuoys.setColumnSelectionAllowed(true);
         tableBuoys.getTableHeader().setReorderingAllowed(false);
@@ -66,7 +81,9 @@ public class BuoyPanel extends javax.swing.JPanel
         columnBinding.setColumnName("Relative Location");
         columnBinding.setColumnClass(String.class);
         bindingGroup.addBinding(jTableBinding);
-        jTableBinding.bind();
+        jTableBinding.bind();org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${selectedBuoy}"), tableBuoys, org.jdesktop.beansbinding.BeanProperty.create("selectedElement"));
+        bindingGroup.addBinding(binding);
+
         jScrollPane1.setViewportView(tableBuoys);
         tableBuoys.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         if (tableBuoys.getColumnModel().getColumnCount() > 0)
@@ -83,22 +100,29 @@ public class BuoyPanel extends javax.swing.JPanel
 
         lblTop.setText("Favorite Buoys:");
 
-        jLabel2.setText("Conditions:");
+        jLabel2.setText("Report:");
 
-        tableConditions.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][]
-            {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
-            },
-            new String []
-            {
-                "Attribute", "Value"
-            }
-        ));
+        tableConditions.getTableHeader().setReorderingAllowed(false);
+
+        eLProperty = org.jdesktop.beansbinding.ELProperty.create("${buoyData}");
+        jTableBinding = org.jdesktop.swingbinding.SwingBindings.createJTableBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, eLProperty, tableConditions);
+        columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${name}"));
+        columnBinding.setColumnName("Weather Variable");
+        columnBinding.setColumnClass(String.class);
+        columnBinding.setEditable(false);
+        columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${value}"));
+        columnBinding.setColumnName("Reading");
+        columnBinding.setColumnClass(String.class);
+        columnBinding.setEditable(false);
+        bindingGroup.addBinding(jTableBinding);
+        jTableBinding.bind();
         jScrollPane2.setViewportView(tableConditions);
+        if (tableConditions.getColumnModel().getColumnCount() > 0)
+        {
+            tableConditions.getColumnModel().getColumn(0).setMinWidth(250);
+            tableConditions.getColumnModel().getColumn(0).setPreferredWidth(250);
+            tableConditions.getColumnModel().getColumn(0).setMaxWidth(250);
+        }
 
         btnFavorite.setText("Remove As Favorite");
         btnFavorite.addActionListener(new java.awt.event.ActionListener()
@@ -109,8 +133,10 @@ public class BuoyPanel extends javax.swing.JPanel
             }
         });
 
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Last Reported At:");
+        lblReportTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${selectedBuoy.reportTime}"), lblReportTime, org.jdesktop.beansbinding.BeanProperty.create("text"));
+        bindingGroup.addBinding(binding);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -120,19 +146,20 @@ public class BuoyPanel extends javax.swing.JPanel
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 352, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(6, 6, 6)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(91, 91, 91)
+                                .addComponent(lblReportTime, javax.swing.GroupLayout.PREFERRED_SIZE, 352, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel2))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnFavorite))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addContainerGap())
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 965, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTop)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -140,15 +167,15 @@ public class BuoyPanel extends javax.swing.JPanel
                 .addGap(10, 10, 10)
                 .addComponent(lblTop)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 579, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(lblReportTime)
                     .addComponent(jLabel2)
-                    .addComponent(btnFavorite)
-                    .addComponent(jLabel1))
+                    .addComponent(btnFavorite))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(20, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 257, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(14, 14, 14))
         );
 
         bindingGroup.bind();
@@ -156,7 +183,9 @@ public class BuoyPanel extends javax.swing.JPanel
 
     private void btnFavoriteActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnFavoriteActionPerformed
     {//GEN-HEADEREND:event_btnFavoriteActionPerformed
-        // TODO add your handling code here:
+        boolean bFav = buoyMode==MODE_ALL;
+        buoyCatcher.setFavoriteStatus(selectedBuoy, bFav);
+        buoyCatcherDialog.markFavorite(bFav);
     }//GEN-LAST:event_btnFavoriteActionPerformed
 
     public static int MODE_ALL = 0;
@@ -181,10 +210,10 @@ public class BuoyPanel extends javax.swing.JPanel
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnFavorite;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblReportTime;
     private javax.swing.JLabel lblTop;
     private javax.swing.JTable tableBuoys;
     private javax.swing.JTable tableConditions;
@@ -192,15 +221,46 @@ public class BuoyPanel extends javax.swing.JPanel
     // End of variables declaration//GEN-END:variables
 
 
-    private List<Buoy> buoyList;
+    private List<Buoy> buoyList = new ArrayList<>();
     public static final String PROP_BUOYLIST = "buoyList";
     
     private Buoy selectedBuoy;
     public static final String PROP_SELECTEDBUOY = "selectedBuoy";
     
-    private List<Buoy> buoyList;
-    public static final String PROP_BUOYLIST = "buoyList";
+    private List<WeatherCondition> buoyData = new ArrayList<>();
+    public static final String PROP_BUOYDATA = "buoyData";
 
+    /**
+     * Get the value of buoyData
+     *
+     * @return the value of buoyData
+     */
+    public List<WeatherCondition> getBuoyData()
+    {
+        return buoyData;
+    }
+
+    /**
+     * Set the value of buoyData
+     *
+     * @param buoyData new value of buoyData
+     */
+    public void setBuoyData(List<WeatherCondition> buoyData)
+    {
+        List<WeatherCondition> oldBuoyData = this.buoyData;
+        this.buoyData = buoyData;
+        propertyChangeSupport.firePropertyChange(PROP_BUOYDATA, oldBuoyData, buoyData);
+    }
+
+    
+      public static void fixTblSelectionModel(JTable table)
+    {
+        table.setCellSelectionEnabled(false);
+        table.setColumnSelectionAllowed(false);
+        table.setRowSelectionAllowed(true);
+    }
+    
+    
     /**
      * Get the value of selectedBuoy
      *
@@ -223,6 +283,13 @@ public class BuoyPanel extends javax.swing.JPanel
         propertyChangeSupport.firePropertyChange(PROP_SELECTEDBUOY, oldSelectedBuoy, selectedBuoy);
         
         btnFavorite.setEnabled(selectedBuoy != null);
+        
+        if ( selectedBuoy != null )
+        {
+            populateBuoyData(selectedBuoy.getConditions());
+           
+        }
+        
     }
 
     
@@ -250,8 +317,7 @@ public class BuoyPanel extends javax.swing.JPanel
         propertyChangeSupport.firePropertyChange(PROP_BUOYLIST, oldBuoyList, buoyList);
     }
 
-    private transient final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-
+    
     /**
      * Add PropertyChangeListener.
      *
@@ -259,6 +325,10 @@ public class BuoyPanel extends javax.swing.JPanel
      */
     public void addPropertyChangeListener(PropertyChangeListener listener)
     {
+        if ( propertyChangeSupport == null)
+        {
+            propertyChangeSupport = new PropertyChangeSupport(this);
+        }
         propertyChangeSupport.addPropertyChangeListener(listener);
     }
 
@@ -273,7 +343,11 @@ public class BuoyPanel extends javax.swing.JPanel
     }
 
   
-
+   /**
+    * Populates the Buoy Table with the passed in list of Buoy objects
+    * @param listB 
+    */
+    
    void populateBuoyList(List <Buoy> listB)
     {
         ArrayList <Buoy> arr = new ArrayList<>();
@@ -284,9 +358,23 @@ public class BuoyPanel extends javax.swing.JPanel
             
         }
         setBuoyList(arr);
+        if ( tableBuoys != null && tableBuoys.getRowCount() > 0 )
+        {
+            tableBuoys.setRowSelectionInterval(0, 0);
+        }
     }
 
-
+    void populateBuoyData(List <WeatherCondition> listWC)
+    {
+        ArrayList <WeatherCondition> arr = new ArrayList<>();
+      
+        if ( listWC != null && listWC.size() > 0)
+        {
+            arr.addAll(listWC);
+            
+        }
+        setBuoyData(arr);
+    }
 
 
 

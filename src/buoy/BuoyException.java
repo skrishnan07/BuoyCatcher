@@ -7,7 +7,7 @@ package buoy;
 
 /**
  *
- * @author Sanjana
+ * @author Shankar Krishnan
  */
 public class BuoyException extends Exception
 {

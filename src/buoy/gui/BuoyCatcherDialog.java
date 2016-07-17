@@ -11,14 +11,14 @@ import java.beans.PropertyChangeSupport;
  */
 /**
  *
- * @author Sanjana
+ * @author Shankar Krishnan
  */
 public class BuoyCatcherDialog extends javax.swing.JDialog
 {
-    
-  
 
     private transient final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
+    private BuoyCatcher buoyCatcher = null;
 
     /**
      * Add PropertyChangeListener.
@@ -40,7 +40,6 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
         propertyChangeSupport.removePropertyChangeListener(listener);
     }
 
-
     /**
      * Creates new form BuoyCatcherDialog
      */
@@ -48,6 +47,13 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     {
         super(parent, modal);
         initComponents();
+
+        tfLat.setText(BuoyCatcher.DEFAULT_LATITUDE);
+        tfLong.setText(BuoyCatcher.DEFAULT_LONGITUDE);
+        spinRadius.getModel().setValue(new Integer(BuoyCatcher.DEFAULT_SEARCH_RADIUS_NM));
+
+        allBuoyPanel.setBuoyCatcherDialog(this);
+        favoriteBuoysPanel.setBuoyCatcherDialog(this);
     }
 
     /**
@@ -61,7 +67,7 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     {
 
         jLabel1 = new javax.swing.JLabel();
-        tfSearchLocation = new javax.swing.JTextField();
+        tfLat = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         tabMain = new javax.swing.JTabbedPane();
         allBuoyPanel = new buoy.gui.AllBuoyPanel();
@@ -69,31 +75,70 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
         btnSearch = new javax.swing.JButton();
         btnClose = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
-        jSpinner1 = new javax.swing.JSpinner();
+        spinRadius = new javax.swing.JSpinner();
         jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        tfLong = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Buoy Catcher");
 
         jLabel1.setText("Search Location:");
 
-        tfSearchLocation.setEditable(false);
-        tfSearchLocation.setText("40.000 N 73.000 W");
+        tfLat.setText("40.000 N");
+        tfLat.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                tfLatActionPerformed(evt);
+            }
+        });
 
-        jLabel3.setText("(NN.nnn N/S NNN.nnn E/W)");
+        jLabel3.setText("(NN.nnn N/S)");
 
         tabMain.addTab("All Buoys", allBuoyPanel);
         tabMain.addTab("My Favorite Buoys", favoriteBuoysPanel);
 
         btnSearch.setText("Search");
+        btnSearch.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                btnSearchActionPerformed(evt);
+            }
+        });
 
         btnClose.setText("Close");
+        btnClose.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                btnCloseActionPerformed(evt);
+            }
+        });
 
         jLabel2.setText("Search Radius:");
 
-        jSpinner1.setModel(new javax.swing.SpinnerNumberModel(100, 50, 200, 5));
+        spinRadius.setModel(new javax.swing.SpinnerNumberModel(100, 50, 200, 5));
 
         jLabel4.setText("Nautical Miles");
+
+        jLabel5.setText("Latitude:");
+
+        jLabel6.setText("Longitude:");
+
+        tfLong.setText("73.000 W");
+        tfLong.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                tfLongActionPerformed(evt);
+            }
+        });
+
+        jLabel7.setText("(NNN.nnn E/W)");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -102,50 +147,96 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tabMain, javax.swing.GroupLayout.DEFAULT_SIZE, 715, Short.MAX_VALUE)
+                    .addComponent(tabMain, javax.swing.GroupLayout.DEFAULT_SIZE, 788, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(jLabel2))
                         .addGap(18, 18, 18)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(tfLat, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(spinRadius))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel6)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel4)
-                                .addGap(28, 28, 28)
-                                .addComponent(btnSearch)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(tfSearchLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(btnClose)))))
+                                .addComponent(tfLong, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(btnSearch))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(72, 72, 72)
+                        .addComponent(btnClose)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(tfSearchLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnClose)
-                    .addComponent(jLabel3))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(tfLong, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel7)
+                        .addComponent(jLabel6))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel1)
+                        .addComponent(tfLat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnClose)
+                        .addComponent(jLabel3)
+                        .addComponent(jLabel5)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel2)
+                        .addComponent(spinRadius, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel4))
                     .addComponent(btnSearch))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabMain, javax.swing.GroupLayout.PREFERRED_SIZE, 518, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addComponent(tabMain, javax.swing.GroupLayout.DEFAULT_SIZE, 828, Short.MAX_VALUE)
+                .addGap(16, 16, 16))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnCloseActionPerformed
+    {//GEN-HEADEREND:event_btnCloseActionPerformed
+        dispose();
+        cleanupAndExit();
+        
+    }//GEN-LAST:event_btnCloseActionPerformed
+
+    public void cleanupAndExit()
+    {
+        buoyCatcher.saveData();
+        System.exit(0);
+    }
+    
+    private void tfLatActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_tfLatActionPerformed
+    {//GEN-HEADEREND:event_tfLatActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tfLatActionPerformed
+
+    private void tfLongActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_tfLongActionPerformed
+    {//GEN-HEADEREND:event_tfLongActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tfLongActionPerformed
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnSearchActionPerformed
+    {//GEN-HEADEREND:event_btnSearchActionPerformed
+
+        int radius = ((Integer) spinRadius.getModel().
+                getValue());
+        buoyCatcher.resetSearchOptions(tfLat.getText(), tfLong.getText(), radius);
+        allBuoyPanel.populateBuoyList(buoyCatcher.getAllBuoys());
+        favoriteBuoysPanel.populateBuoyList(buoyCatcher.getFavoriteBuoys());
+    }//GEN-LAST:event_btnSearchActionPerformed
 
     /**
      * @param args the command line arguments
@@ -193,17 +284,18 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e)
                     {
-                        System.exit(0);
+                        dialog.cleanupAndExit();
                     }
                 });
-                
-                BuoyCatcher buoyCatcher = new BuoyCatcher();
+                int radius = ((Integer) dialog.spinRadius.getModel().
+                        getValue()).intValue();
+                BuoyCatcher buoyCatcher = new BuoyCatcher(dialog.tfLat.getText(),
+                        dialog.tfLong.getText(), radius);
                 buoyCatcher.findBuoys();
-                
+
                 dialog.setBuoyCatcher(buoyCatcher);
                 dialog.setVisible(true);
 
-               
             }
 
         });
@@ -218,14 +310,24 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JSpinner jSpinner1;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JSpinner spinRadius;
     private javax.swing.JTabbedPane tabMain;
-    private javax.swing.JTextField tfSearchLocation;
+    private javax.swing.JTextField tfLat;
+    private javax.swing.JTextField tfLong;
     // End of variables declaration//GEN-END:variables
 
     private void setBuoyCatcher(BuoyCatcher buoyCatcher)
     {
+        this.buoyCatcher = buoyCatcher;
         allBuoyPanel.setBuoyCatcher(buoyCatcher);
         favoriteBuoysPanel.setBuoyCatcher(buoyCatcher);
+    }
+
+    void markFavorite(boolean bFav)
+    {
+        favoriteBuoysPanel.populateBuoyList(buoyCatcher.getFavoriteBuoys());
     }
 }

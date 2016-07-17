@@ -26,7 +26,15 @@ public class BuoyCatcher
 {
 
     public static final String NOAA_BUOY_RSS_URL = "http://www.ndbc.noaa.gov/rss/ndbc_obs_search.php";
-    public String buoySearchOptions = "?lat=40N&lon=73W&radius=100";
+    public static final String DEFAULT_LATITUDE = "40.000N";
+    public static final String DEFAULT_LONGITUDE = "73.000W";
+    public static final int DEFAULT_SEARCH_RADIUS_NM = 100;
+
+    private String latitude = DEFAULT_LATITUDE;
+    private String longitude = DEFAULT_LONGITUDE;
+    private int searchRadius = DEFAULT_SEARCH_RADIUS_NM;
+
+    private String buoySearchOptions;
 
     //Parser for parsing buoy data
     public BuoyParser buoyParser = new BuoyParser();
@@ -37,20 +45,34 @@ public class BuoyCatcher
     // List of favorite buoys
     private TreeMap<String, Buoy> myBuoys = new TreeMap<>();
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args)
+    public BuoyCatcher(String lat, String lng, int radius)
     {
-        BuoyCatcher buoyCatcher = new BuoyCatcher();
-        buoyCatcher.findBuoys();
-        //buoyCatcher.printBuoys();
+        latitude = lat;
+        longitude = lng;
+        searchRadius = radius;
+
+        buoySearchOptions = "?lat=" + latitude + "&lon=" + longitude + "&radius=" + searchRadius;
+    }
+
+    public void resetSearchOptions(String lat, String lng, int radius)
+    {
+        latitude = lat;
+        longitude = lng;
+        searchRadius = radius;
+
+        buoySearchOptions = "?lat=" + latitude + "&lon=" + longitude + "&radius=" + searchRadius;
+        findBuoys();
     }
 
     public void findBuoys()
     {
         try
         {
+            // Clear Old data if any
+            
+            allBuoys.clear();
+            myBuoys.clear();
+            
             //Construct the URL of the RSS Feed
 
             URL url = new URL(NOAA_BUOY_RSS_URL + buoySearchOptions);
@@ -62,18 +84,6 @@ public class BuoyCatcher
             for (int i = 0; i < numItems; i++)
             {
                 buoy = processBuoyItem(feed.getItem(i));
-
-                System.out.println("========================================");
-                System.out.println(feed.getItem(i).getTitle());
-                System.out.println(feed.getItem(i).getDescriptionAsText());
-                System.out.println(feed.getItem(i).getDescriptionAsHTML());
-
-                System.out.println("========================================");
-
-                System.out.println(buoy.toReportString());
-
-                System.out.println("****************************************");
-
             }
         } catch (Exception ex)
         {
@@ -91,14 +101,15 @@ public class BuoyCatcher
         col = allBuoys.values();
 
         ArrayList<Buoy> listBuoys = new ArrayList<>(col);
-        Collections.sort(listBuoys, new Buoy.IDComparator());
+        Collections.sort(listBuoys, new Buoy.DistanceComparator());
 
         return listBuoys;
     }
 
     /**
      *
-     * @return returns a list of favorite Buoys sorted alphabetically by Station ID
+     * @return returns a list of favorite Buoys sorted alphabetically by Station
+     * ID
      */
     public List<Buoy> getFavoriteBuoys()
     {
@@ -106,28 +117,28 @@ public class BuoyCatcher
         col = myBuoys.values();
 
         ArrayList<Buoy> listBuoys = new ArrayList<>(col);
-        Collections.sort(listBuoys, new Buoy.IDComparator());
+        Collections.sort(listBuoys, new Buoy.DistanceComparator());
 
         return listBuoys;
     }
-    
+
     /**
-     * Effectively toggles the favorite state of the buoy
-     * The bFav flag makes the state setting explicit
+     * Effectively toggles the favorite state of the buoy The bFav flag makes
+     * the state setting explicit
+     *
      * @param buoy the buoy that needs to be affected
      * @param bFav TRUE: Make it a Favorite. FALSE: Remove from Favorite
      */
     public void setFavoriteStatus(Buoy buoy, boolean bFav)
     {
-        if ( !bFav && myBuoys.containsValue(buoy) )
+        if (!bFav && myBuoys.containsValue(buoy))
         {
             myBuoys.remove(buoy.getStationID());
-        }
-        else if (bFav)
+        } else if (bFav)
         {
             myBuoys.put(buoy.getStationID(), buoy);
         }
-    
+
     }
 
     /**
@@ -171,7 +182,7 @@ public class BuoyCatcher
 
     private void printBuoys()
     {
-        List <Buoy> listBuoys = getAllBuoys();
+        List<Buoy> listBuoys = getAllBuoys();
         for (Buoy buoy : listBuoys)
         {
             System.out.println("****************************");
@@ -237,5 +248,10 @@ public class BuoyCatcher
             }
         }
         return null;
+    }
+
+    public void saveData()
+    {
+        
     }
 }
