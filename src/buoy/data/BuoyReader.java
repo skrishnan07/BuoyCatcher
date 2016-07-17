@@ -121,9 +121,10 @@ public class BuoyReader
 
     }
 
-    public void readBuoyCatcherCSV(BuoyCatcher bcatcher, BuoyParserErrorHandler buoyErrorHandler)
+    public boolean readBuoyCatcherCSV(BuoyCatcher bcatcher, BuoyParserErrorHandler buoyErrorHandler)
     {
 
+        boolean fileRead = false;
         boolean bEndOfFile = false;
         String line = null;
         BuoyLineParser recordParser = null;
@@ -134,7 +135,7 @@ public class BuoyReader
 
         if (bcatcher == null)
         {
-            return;
+            return fileRead;
         }
 
         try
@@ -143,6 +144,10 @@ public class BuoyReader
             {
 
                 BufferedReader br = openFile(fileName);
+                if ( br == null)
+                {
+                    return fileRead;
+                }
 
                 String tokens[] = null;
 
@@ -166,6 +171,7 @@ public class BuoyReader
                             tokens = line.split("\\" + BuoyWriter.FS_WRITE);
                             if (tokens != null && tokens.length > 0)
                             {
+                                fileRead = true;
                                 recordParser = mapParsers.get(tokens[0]);
                                 if (recordParser != null)
                                 {
@@ -188,6 +194,8 @@ public class BuoyReader
 
             buoyErrorHandler.handleParsingError(new BuoyException(ex.getMessage()));
         }
+        
+        return fileRead;
 
     }
 

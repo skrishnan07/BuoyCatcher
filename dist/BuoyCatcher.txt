@@ -1,0 +1,36 @@
+###BuoyCatcher Options: BCOPTS,LAT,LONG,RADIUS
+BCOPTS,40.000N,73.000W,100
+
+###Favorite:  BCFAV,ID,NAME,LOCATION,RELATIVE_LOC,REPORT_TIME
+###Weather Condition:  BCWC,NAME,VALUE
+BCFAV,44066,TEXAS TOWER #4 - 75 NM EAST OF LONG BEACH<COMMA> NJ,39.568N 72.586W,32 nautical miles SE of search location of 40N 73W.,July 17<COMMA> 2016 5:50 pm EDT
+BCWC,Air Temperature,78°F (25.6°C)
+BCWC,Atmospheric Pressure,30.11 in (1019.6 mb)
+BCWC,Average Period,4.3 sec
+BCWC,Dominant Wave Period,5 sec
+BCWC,Mean Wave Direction,S (189°)
+BCWC,Pressure Tendency,+0.00 in (+0.0 mb)
+BCWC,Significant Wave Height,3 ft
+BCWC,Water Temperature,77°F (24.8°C)
+
+BCFAV,44091,BARNEGAT<COMMA> NJ (209),39.778N 73.769W,38 nautical miles WSW of search location of 40N 73W.,July 17<COMMA> 2016 6:22 pm EDT
+BCWC,Average Period,3.9 sec
+BCWC,Dominant Wave Period,4 sec
+BCWC,Mean Wave Direction,SSW (206°)
+BCWC,Significant Wave Height,4 ft
+BCWC,Water Temperature,78°F (25.6°C)
+
+BCFAV,44017,MONTAUK POINT - 23 NM SSW OF MONTAUK POINT<COMMA> NY,40.694N 72.048W,60 nautical miles NE of search location of 40N 73W.,July 17<COMMA> 2016 5:50 pm EDT
+BCWC,Air Temperature,77°F (25.0°C)
+BCWC,Atmospheric Pressure,30.09 in (1019.0 mb)
+BCWC,Average Period,4.5 sec
+BCWC,Dew Point,73°F (23.0°C)
+BCWC,Dominant Wave Period,9 sec
+BCWC,Mean Wave Direction,SSE (167°)
+BCWC,Pressure Tendency,+0.00 in (+0.0 mb)
+BCWC,Significant Wave Height,2 ft
+BCWC,Water Temperature,76°F (24.4°C)
+BCWC,Wind Direction,SW (230°)
+BCWC,Wind Gust,12 knots
+BCWC,Wind Speed,10 knots
+

@@ -8,12 +8,21 @@ package buoy.gui;
 import buoy.model.Buoy;
 import buoy.model.BuoyCatcher;
 import buoy.model.WeatherCondition;
+import java.awt.Desktop;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingWorker;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
@@ -64,14 +73,15 @@ public class BuoyPanel extends javax.swing.JPanel
         jScrollPane1 = new javax.swing.JScrollPane();
         tableBuoys = new javax.swing.JTable();
         lblTop = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        lblLegend = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
         tableConditions = new javax.swing.JTable();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
         btnFavorite = new javax.swing.JButton();
         lblReportTime = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         lblURL = new javax.swing.JLabel();
-        lblLegend = new javax.swing.JLabel();
 
         tableBuoys.setColumnSelectionAllowed(true);
         tableBuoys.getTableHeader().setReorderingAllowed(false);
@@ -98,19 +108,17 @@ public class BuoyPanel extends javax.swing.JPanel
         tableBuoys.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         if (tableBuoys.getColumnModel().getColumnCount() > 0)
         {
-            tableBuoys.getColumnModel().getColumn(0).setResizable(false);
+            tableBuoys.getColumnModel().getColumn(0).setMinWidth(150);
             tableBuoys.getColumnModel().getColumn(0).setPreferredWidth(150);
-            tableBuoys.getColumnModel().getColumn(1).setResizable(false);
+            tableBuoys.getColumnModel().getColumn(0).setMaxWidth(150);
             tableBuoys.getColumnModel().getColumn(1).setPreferredWidth(250);
-            tableBuoys.getColumnModel().getColumn(2).setResizable(false);
+            tableBuoys.getColumnModel().getColumn(2).setMinWidth(150);
             tableBuoys.getColumnModel().getColumn(2).setPreferredWidth(150);
-            tableBuoys.getColumnModel().getColumn(3).setResizable(false);
+            tableBuoys.getColumnModel().getColumn(2).setMaxWidth(150);
             tableBuoys.getColumnModel().getColumn(3).setPreferredWidth(250);
         }
 
         lblTop.setText("Favorite Buoys:");
-
-        jLabel2.setText("Report:");
 
         tableConditions.getTableHeader().setReorderingAllowed(false);
 
@@ -126,13 +134,15 @@ public class BuoyPanel extends javax.swing.JPanel
         columnBinding.setEditable(false);
         bindingGroup.addBinding(jTableBinding);
         jTableBinding.bind();
-        jScrollPane2.setViewportView(tableConditions);
+        jScrollPane3.setViewportView(tableConditions);
         if (tableConditions.getColumnModel().getColumnCount() > 0)
         {
             tableConditions.getColumnModel().getColumn(0).setMinWidth(250);
             tableConditions.getColumnModel().getColumn(0).setPreferredWidth(250);
             tableConditions.getColumnModel().getColumn(0).setMaxWidth(250);
         }
+
+        jLabel2.setText("Report:");
 
         btnFavorite.setText("Remove As Favorite");
         btnFavorite.addActionListener(new java.awt.event.ActionListener()
@@ -144,7 +154,6 @@ public class BuoyPanel extends javax.swing.JPanel
         });
 
         lblReportTime.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        lblReportTime.setText("ABC");
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${selectedBuoy.reportTime}"), lblReportTime, org.jdesktop.beansbinding.BeanProperty.create("text"));
         bindingGroup.addBinding(binding);
@@ -152,10 +161,44 @@ public class BuoyPanel extends javax.swing.JPanel
         jLabel1.setText("URL:");
 
         lblURL.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        lblURL.setText("XYZ");
 
-        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${selectedBuoy.linkURL}"), lblURL, org.jdesktop.beansbinding.BeanProperty.create("text"));
-        bindingGroup.addBinding(binding);
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGap(3, 3, 3)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jLabel1)
+                        .addComponent(jLabel2))
+                    .addGap(43, 43, 43)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(lblReportTime, javax.swing.GroupLayout.PREFERRED_SIZE, 352, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblURL, javax.swing.GroupLayout.PREFERRED_SIZE, 569, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnFavorite)
+                    .addGap(3, 3, 3)))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 75, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGap(31, 31, 31)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                        .addComponent(btnFavorite)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                                .addComponent(jLabel1)
+                                .addComponent(lblURL))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                                .addComponent(jLabel2)
+                                .addComponent(lblReportTime))))
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -165,22 +208,12 @@ public class BuoyPanel extends javax.swing.JPanel
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
-                    .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTop)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 419, Short.MAX_VALUE)
                         .addComponent(lblLegend, javax.swing.GroupLayout.PREFERRED_SIZE, 460, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2))
-                        .addGap(43, 43, 43)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblReportTime, javax.swing.GroupLayout.PREFERRED_SIZE, 352, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblURL, javax.swing.GroupLayout.PREFERRED_SIZE, 569, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 133, Short.MAX_VALUE)
-                        .addComponent(btnFavorite)))
+                    .addComponent(jScrollPane3)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -191,24 +224,12 @@ public class BuoyPanel extends javax.swing.JPanel
                     .addComponent(lblTop)
                     .addComponent(lblLegend))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 560, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(btnFavorite))
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                            .addComponent(jLabel1)
-                            .addComponent(lblURL))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                            .addComponent(jLabel2)
-                            .addComponent(lblReportTime))
-                        .addGap(3, 3, 3)))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 483, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 257, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(14, 14, 14))
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(8, 8, 8))
         );
 
         bindingGroup.bind();
@@ -233,16 +254,16 @@ public class BuoyPanel extends javax.swing.JPanel
         {
             btnFavorite.setText("Mark As Favorite");
             lblTop.setText("All Buoys");
-            
+
             setTableRowCellRenderer(tableBuoys, new FavoriteBuoyCellRenderer());
             lblLegend.setText("Buoys highlighted in bold font are already included in the Favorites list");
-            
+
         } else
         {
             btnFavorite.setText("Remove From Favorites");
             lblTop.setText("My Favorite Buoys");
             lblLegend.setText("Red highlight indicates a favorite buoy with stale data");
-            
+
             setTableRowCellRenderer(tableBuoys, new MissingBuoyCellRenderer());
         }
     }
@@ -252,8 +273,9 @@ public class BuoyPanel extends javax.swing.JPanel
     private javax.swing.JButton btnFavorite;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel lblLegend;
     private javax.swing.JLabel lblReportTime;
     private javax.swing.JLabel lblTop;
@@ -311,6 +333,8 @@ public class BuoyPanel extends javax.swing.JPanel
         return selectedBuoy;
     }
 
+    private LinkMouseListener linkmousListner = null;
+
     /**
      * Set the value of selectedBuoy
      *
@@ -323,19 +347,24 @@ public class BuoyPanel extends javax.swing.JPanel
 
         propertyChangeSupport.firePropertyChange(PROP_SELECTEDBUOY, oldSelectedBuoy, selectedBuoy);
 
-        btnFavorite.setEnabled(selectedBuoy != null );
+        btnFavorite.setEnabled(selectedBuoy != null);
 
         if (selectedBuoy != null)
         {
             populateBuoyData(selectedBuoy.getConditions());
-            
-            if ( buoyMode == MODE_ALL && selectedBuoy.isFavorite())
+
+            if (buoyMode == MODE_ALL && selectedBuoy.isFavorite())
             {
                 btnFavorite.setEnabled(false);
             }
 
-        }
-        else
+            lblURL.setText(selectedBuoy.getLinkURL());
+
+            LinkMouseListener ml = new LinkMouseListener();
+            makeLinkable(lblURL, ml, linkmousListner);
+            linkmousListner = ml;
+
+        } else
         {
             populateBuoyData(new ArrayList<>());
         }
@@ -430,11 +459,12 @@ public class BuoyPanel extends javax.swing.JPanel
         }
         setBuoyData(arr);
     }
-    
+
     /**
      * Set the table Cell Renderer
+     *
      * @param table
-     * @param tableRowRenderer 
+     * @param tableRowRenderer
      */
     protected void setTableRowCellRenderer(JTable table, TableCellRenderer tableRowRenderer)
     {
@@ -445,6 +475,135 @@ public class BuoyPanel extends javax.swing.JPanel
             column = (TableColumn) tcols.nextElement();
             column.setCellRenderer(tableRowRenderer);
         }
-    }    
+    }
+
+    // Support for clickable HTML Links
+    private static final String A_HREF = "<a href=\"";
+    private static final String HREF_CLOSED = "\">";
+    private static final String HREF_END = "</a>";
+    private static final String HTML = "<html>";
+    private static final String HTML_END = "</html>";
+
+    private static void makeLinkable(JLabel c, MouseListener ml, MouseListener old)
+    {
+        assert ml != null;
+        if (old != null)
+        {
+            c.removeMouseListener(old);
+        }
+        c.setText(htmlIfy(linkIfy(c.getText())));
+        c.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        c.addMouseListener(ml);
+    }
+
+    private static boolean isBrowsingSupported()
+    {
+        if (!Desktop.isDesktopSupported())
+        {
+            return false;
+        }
+        boolean result = false;
+        Desktop desktop = java.awt.Desktop.getDesktop();
+        if (desktop.isSupported(Desktop.Action.BROWSE))
+        {
+            result = true;
+        }
+        return result;
+
+    }
+
+    private static class LinkMouseListener extends MouseAdapter
+    {
+
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent evt)
+        {
+            JLabel l = (JLabel) evt.getSource();
+            try
+            {
+                URI uri = new java.net.URI(getPlainLink(l.getText()));
+                (new LinkRunner(uri)).execute();
+            } catch (URISyntaxException use)
+            {
+                throw new AssertionError(use + ": " + l.getText()); //NOI18N
+            }
+        }
+    }
+
+    private static class LinkRunner extends SwingWorker<Void, Void>
+    {
+
+        private final URI uri;
+
+        private LinkRunner(URI u)
+        {
+            if (u == null)
+            {
+                throw new NullPointerException();
+            }
+            uri = u;
+        }
+
+        @Override
+        protected Void doInBackground() throws Exception
+        {
+            Desktop desktop = java.awt.Desktop.getDesktop();
+            desktop.browse(uri);
+            return null;
+        }
+
+        @Override
+        protected void done()
+        {
+            try
+            {
+                get();
+            } catch (ExecutionException ee)
+            {
+                handleException(uri, ee);
+            } catch (InterruptedException ie)
+            {
+                handleException(uri, ie);
+            }
+        }
+
+        private static void handleException(URI u, Exception e)
+        {
+            JOptionPane.showMessageDialog(null, "Sorry, a problem occurred while trying to open this link in your system's standard browser.", "A problem occured", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static String getPlainLink(String s)
+    {
+        return s.substring(s.indexOf(A_HREF) + A_HREF.length(), s.indexOf(HREF_CLOSED));
+    }
+
+//WARNING
+//This method requires that s is a plain string that requires
+//no further escaping
+    private static String linkIfy(String s)
+    {
+        if (s != null)
+        {
+            return A_HREF.concat(s).concat(HREF_CLOSED).concat(s).concat(HREF_END);
+        } else
+        {
+            return s;
+        }
+    }
+
+//WARNING
+//This method requires that s is a plain string that requires
+//no further escaping
+    private static String htmlIfy(String s)
+    {
+        if (s != null)
+        {
+            return HTML.concat(s).concat(HTML_END);
+        } else
+        {
+            return s;
+        }
+    }
 
 }

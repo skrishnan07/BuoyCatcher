@@ -361,7 +361,14 @@ public class BuoyCatcher
     {
         if ( buoyReader != null )
         {
-            buoyReader.readBuoyCatcherCSV(this, errorHandler);
+            boolean fileRead =  buoyReader.readBuoyCatcherCSV(this, errorHandler);
+            if ( !fileRead )
+            {
+                // No previous session file found or read.
+                //set the default values for the search paramaters
+                
+                initSearchOptions(DEFAULT_LATITUDE, DEFAULT_LONGITUDE, DEFAULT_SEARCH_RADIUS_NM);
+            }
         }
     }
 
