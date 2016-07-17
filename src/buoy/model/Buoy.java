@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package buoy;
+package buoy.model;
 
+import buoy.data.BuoyWriter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
@@ -52,7 +53,59 @@ public class Buoy implements Serializable
     //relative distance from point of search
     private int distance = 0;
 
-    Buoy(String id, String name)
+    // Other properties based on user stories
+    private boolean favorite;
+    public static final String PROP_FAVORITE = "favorite";
+    
+    private boolean stale = false;
+    public static final String PROP_STALE = "stale";
+
+    /**
+     * Get the value of stale
+     *
+     * @return the value of stale
+     */
+    public boolean isStale()
+    {
+        return stale;
+    }
+
+    /**
+     * Set the value of stale
+     *
+     * @param stale new value of stale
+     */
+    public void setStale(boolean stale)
+    {
+        boolean oldStale = this.stale;
+        this.stale = stale;
+        propertyChangeSupport.firePropertyChange(PROP_STALE, oldStale, stale);
+    }
+
+
+    /**
+     * Get the value of favorite
+     *
+     * @return the value of favorite
+     */
+    public boolean isFavorite()
+    {
+        return favorite;
+    }
+
+    /**
+     * Set the value of favorite
+     *
+     * @param favorite new value of favorite
+     */
+    public void setFavorite(boolean favorite)
+    {
+        boolean oldFavorite = this.favorite;
+        this.favorite = favorite;
+        propertyChangeSupport.firePropertyChange(PROP_FAVORITE, oldFavorite, favorite);
+    }
+
+    public Buoy(String id, String name)
     {
         this.name = name;
         stationID = id;
@@ -209,7 +262,7 @@ public class Buoy implements Serializable
     /**
      * Add PropertyChangeListener.
      *
-     * @param listener
+     * @param listener to listen to property changes
      */
     public void addPropertyChangeListener(PropertyChangeListener listener)
     {
@@ -219,7 +272,7 @@ public class Buoy implements Serializable
     /**
      * Remove PropertyChangeListener.
      *
-     * @param listener
+     * @param listener that was previously registered to listen to property change events
      */
     public void removePropertyChangeListener(PropertyChangeListener listener)
     {
@@ -231,6 +284,40 @@ public class Buoy implements Serializable
         return name;
     }
 
+    /**
+     * Serializes itself into a CSV string
+     * This is only called for the favorite buoys
+     * Saves buoy header information in a separate record
+     * @return A CSV version of the Buoy's header information
+     */
+    public String toCSVRecord()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(BuoyWriter.BUOY_FAVORITE_RECORD_ID);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(stationID);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(name);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(latlong);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(relativeLocation);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(reportTime);
+
+        return sb.toString();
+    }
+
+    /**
+     * Used in early development to do a pretty-print output
+     * @return A pretty-printed output describing the contents of a buoy object
+     */
     public String toReportString()
     {
         StringBuilder sb = new StringBuilder();
@@ -268,7 +355,7 @@ public class Buoy implements Serializable
     }
 
     // Add a name value pair of Weather Condition Variable
-    void addWeatherCondition(String tag, String value)
+    public void addWeatherCondition(String tag, String value)
     {
         WeatherCondition wc = new WeatherCondition(tag, value);
         conditions.put(tag, wc);
@@ -305,7 +392,7 @@ public class Buoy implements Serializable
     }
 
     // Add a comparator
-    public static class DistanceComparator implements Comparator<Buoy>
+    public static class BuoyComparator implements Comparator<Buoy>
     {
 
         @Override
@@ -316,12 +403,27 @@ public class Buoy implements Serializable
                 return 1;
             } else
             {
-                int result = Integer.compare(o1.distance,  o2.distance);
-                if ( result == 0 )
+                // First order by favorites
+                if (o1.favorite && !o2.favorite)
                 {
-                    return o1.relativeLocation.compareTo(o2.relativeLocation);
+                    return -1;
+                } else if (o2.favorite && !o1.favorite)
+                {
+                    return 1;
                 }
-                else
+
+                // Then by distance
+                int result = Integer.compare(o1.distance, o2.distance);
+                if (result == 0)
+                {
+                    // Handle the case where there is an error in distance computation
+                    if (o1.distance == 0 && o2.distance == 0)
+                    {
+                        return o1.relativeLocation.compareTo(o2.relativeLocation);
+                    }
+                    // Finally compare ny name;
+                    return o1.stationID.compareTo(o2.stationID);
+                } else
                 {
                     return result;
                 }
@@ -329,9 +431,16 @@ public class Buoy implements Serializable
         }
     }
 
-
-public int getRelativeDistance()
+    /**
+     * Extracts the distance of the buoy from the search center based on
+     * information returned in the form. The calculation is done at the time the
+     * relative position is set
+     *
+     * @return the numeric distance of the observation point from the search location
+     */
+    public int getRelativeDistance()
     {
         return distance;
     }
+
 }

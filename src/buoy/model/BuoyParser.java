@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package buoy;
+package buoy.model;
 
+import buoy.common.BuoyException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -38,7 +39,8 @@ public class BuoyParser
      * @param textDescription weather data in text form
      * @param htmlDescription weather data in HTMl form
      * @return returns a populated buoy object to be added to the main list
-     * @throws BuoyException
+     * @throws BuoyException if a station ID cannot be determined or if
+     * there is incomplete information in constructing the weather conditions
      */
     public Buoy addBuoy(String title, String link, String textDescription, String htmlDescription) throws BuoyException
     {
@@ -54,11 +56,7 @@ public class BuoyParser
         {
 
             // Extract station ID, Full Name and URL link
-            
-            //String stationID = extractStationID(title);
-            //String name = extractName(title, StationID);
-            
-            //buoy = new Buoy(title, stationID);
+ 
             buoy = createBuoy(title);
             buoy.setLinkURL(link);
 
@@ -112,22 +110,10 @@ public class BuoyParser
         return buoy;
     }
 
-    public static String extractStationID(String title)
-    {
-        String regexp = "^(.+?)-";
-        Pattern pat = Pattern.compile(regexp);
-        Matcher match = pat.matcher(title);
-
-        if (match.find())
-        {
-            return match.group().replace("-", "").trim();
-        } else
-        {
-            return title;
-        }
-    }
+  
     
     
+    public static final String STATION_PREFIX = "Station";
     
     public  Buoy createBuoy(String title)
     {
@@ -145,6 +131,15 @@ public class BuoyParser
             name = title.substring(title.
                     indexOf(stationID) + stationID.length(), title.length()).trim();
             stationID =  stationID.replace("-", "").trim();
+            
+            // Take out the literal "Station" from the Station ID if present;
+            
+            int firstIndex = stationID.indexOf(STATION_PREFIX);
+            if ( firstIndex >= 0)
+            {
+                stationID = stationID.substring(firstIndex+ STATION_PREFIX.length(), stationID.length()).trim();
+            }
+            
         } else
         {
             stationID = title;

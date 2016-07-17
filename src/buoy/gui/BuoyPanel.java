@@ -5,14 +5,17 @@
  */
 package buoy.gui;
 
-import buoy.Buoy;
-import buoy.BuoyCatcher;
-import buoy.WeatherCondition;
+import buoy.model.Buoy;
+import buoy.model.BuoyCatcher;
+import buoy.model.WeatherCondition;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 /**
  *
@@ -20,24 +23,28 @@ import javax.swing.JTable;
  */
 public class BuoyPanel extends javax.swing.JPanel
 {
-    
-    protected  PropertyChangeSupport propertyChangeSupport;
-    protected  BuoyCatcherDialog buoyCatcherDialog = null;
 
-   
+    protected PropertyChangeSupport propertyChangeSupport;
+    protected BuoyCatcherDialog buoyCatcherDialog = null;
+
     /**
-     * Creates new form FavoritesPanel
-     * Set row selection settings to allow single row selections
+     * Creates new form FavoritesPanel Set row selection settings to allow
+     * single row selections
      */
     public BuoyPanel()
     {
-       
+
         initComponents();
         fixTblSelectionModel(tableBuoys);
         fixTblSelectionModel(tableConditions);
-        
+
+        if (tableBuoys != null)
+        {
+            tableBuoys.putClientProperty(BuoyCatcherDialog.CLIENT_PROPERTY_BUOY_LIST, buoyList);
+        }
+
     }
-    
+
     public void setBuoyCatcherDialog(BuoyCatcherDialog bcDlg)
     {
         buoyCatcherDialog = bcDlg;
@@ -62,6 +69,9 @@ public class BuoyPanel extends javax.swing.JPanel
         tableConditions = new javax.swing.JTable();
         btnFavorite = new javax.swing.JButton();
         lblReportTime = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        lblURL = new javax.swing.JLabel();
+        lblLegend = new javax.swing.JLabel();
 
         tableBuoys.setColumnSelectionAllowed(true);
         tableBuoys.getTableHeader().setReorderingAllowed(false);
@@ -133,9 +143,18 @@ public class BuoyPanel extends javax.swing.JPanel
             }
         });
 
-        lblReportTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblReportTime.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lblReportTime.setText("ABC");
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${selectedBuoy.reportTime}"), lblReportTime, org.jdesktop.beansbinding.BeanProperty.create("text"));
+        bindingGroup.addBinding(binding);
+
+        jLabel1.setText("URL:");
+
+        lblURL.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lblURL.setText("XYZ");
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${selectedBuoy.linkURL}"), lblURL, org.jdesktop.beansbinding.BeanProperty.create("text"));
         bindingGroup.addBinding(binding);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -145,34 +164,48 @@ public class BuoyPanel extends javax.swing.JPanel
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(91, 91, 91)
-                                .addComponent(lblReportTime, javax.swing.GroupLayout.PREFERRED_SIZE, 352, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jLabel2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnFavorite))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 965, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1)
                     .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTop)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(lblLegend, javax.swing.GroupLayout.PREFERRED_SIZE, 460, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2))
+                        .addGap(43, 43, 43)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblReportTime, javax.swing.GroupLayout.PREFERRED_SIZE, 352, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblURL, javax.swing.GroupLayout.PREFERRED_SIZE, 569, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 133, Short.MAX_VALUE)
+                        .addComponent(btnFavorite)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(10, 10, 10)
-                .addComponent(lblTop)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblTop)
+                    .addComponent(lblLegend))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 579, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 560, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(lblReportTime)
-                    .addComponent(jLabel2)
-                    .addComponent(btnFavorite))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnFavorite))
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jLabel1)
+                            .addComponent(lblURL))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jLabel2)
+                            .addComponent(lblReportTime))
+                        .addGap(3, 3, 3)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 257, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(14, 14, 14))
@@ -183,50 +216,59 @@ public class BuoyPanel extends javax.swing.JPanel
 
     private void btnFavoriteActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnFavoriteActionPerformed
     {//GEN-HEADEREND:event_btnFavoriteActionPerformed
-        boolean bFav = buoyMode==MODE_ALL;
+        boolean bFav = buoyMode == MODE_ALL;
         buoyCatcher.setFavoriteStatus(selectedBuoy, bFav);
         buoyCatcherDialog.markFavorite(bFav);
     }//GEN-LAST:event_btnFavoriteActionPerformed
 
     public static int MODE_ALL = 0;
     public static int MODE_FAVORITES = 1;
-    
+
     private int buoyMode = MODE_ALL;
+
     protected void setMode(int mode)
     {
         buoyMode = mode;
-        if ( buoyMode == MODE_ALL)
+        if (buoyMode == MODE_ALL)
         {
             btnFavorite.setText("Mark As Favorite");
             lblTop.setText("All Buoys");
-        }
-        else
+            
+            setTableRowCellRenderer(tableBuoys, new FavoriteBuoyCellRenderer());
+            lblLegend.setText("Buoys highlighted in bold font are already included in the Favorites list");
+            
+        } else
         {
             btnFavorite.setText("Remove From Favorites");
             lblTop.setText("My Favorite Buoys");
+            lblLegend.setText("Red highlight indicates a favorite buoy with stale data");
+            
+            setTableRowCellRenderer(tableBuoys, new MissingBuoyCellRenderer());
         }
     }
-    
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnFavorite;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblLegend;
     private javax.swing.JLabel lblReportTime;
     private javax.swing.JLabel lblTop;
+    private javax.swing.JLabel lblURL;
     private javax.swing.JTable tableBuoys;
     private javax.swing.JTable tableConditions;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 
-
     private List<Buoy> buoyList = new ArrayList<>();
     public static final String PROP_BUOYLIST = "buoyList";
-    
+
     private Buoy selectedBuoy;
     public static final String PROP_SELECTEDBUOY = "selectedBuoy";
-    
+
     private List<WeatherCondition> buoyData = new ArrayList<>();
     public static final String PROP_BUOYDATA = "buoyData";
 
@@ -252,15 +294,13 @@ public class BuoyPanel extends javax.swing.JPanel
         propertyChangeSupport.firePropertyChange(PROP_BUOYDATA, oldBuoyData, buoyData);
     }
 
-    
-      public static void fixTblSelectionModel(JTable table)
+    public static void fixTblSelectionModel(JTable table)
     {
         table.setCellSelectionEnabled(false);
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
     }
-    
-    
+
     /**
      * Get the value of selectedBuoy
      *
@@ -280,19 +320,28 @@ public class BuoyPanel extends javax.swing.JPanel
     {
         Buoy oldSelectedBuoy = this.selectedBuoy;
         this.selectedBuoy = selectedBuoy;
+
         propertyChangeSupport.firePropertyChange(PROP_SELECTEDBUOY, oldSelectedBuoy, selectedBuoy);
-        
-        btnFavorite.setEnabled(selectedBuoy != null);
-        
-        if ( selectedBuoy != null )
+
+        btnFavorite.setEnabled(selectedBuoy != null );
+
+        if (selectedBuoy != null)
         {
             populateBuoyData(selectedBuoy.getConditions());
-           
+            
+            if ( buoyMode == MODE_ALL && selectedBuoy.isFavorite())
+            {
+                btnFavorite.setEnabled(false);
+            }
+
         }
-        
+        else
+        {
+            populateBuoyData(new ArrayList<>());
+        }
+
     }
 
-    
     protected BuoyCatcher buoyCatcher = null;
 
     /**
@@ -314,10 +363,16 @@ public class BuoyPanel extends javax.swing.JPanel
     {
         List<Buoy> oldBuoyList = this.buoyList;
         this.buoyList = buoyList;
+
+        if (tableBuoys != null)
+        {
+            tableBuoys.putClientProperty(BuoyCatcherDialog.CLIENT_PROPERTY_BUOY_LIST, this.buoyList);
+        }
+
         propertyChangeSupport.firePropertyChange(PROP_BUOYLIST, oldBuoyList, buoyList);
+
     }
 
-    
     /**
      * Add PropertyChangeListener.
      *
@@ -325,7 +380,7 @@ public class BuoyPanel extends javax.swing.JPanel
      */
     public void addPropertyChangeListener(PropertyChangeListener listener)
     {
-        if ( propertyChangeSupport == null)
+        if (propertyChangeSupport == null)
         {
             propertyChangeSupport = new PropertyChangeSupport(this);
         }
@@ -342,42 +397,54 @@ public class BuoyPanel extends javax.swing.JPanel
         propertyChangeSupport.removePropertyChangeListener(listener);
     }
 
-  
-   /**
-    * Populates the Buoy Table with the passed in list of Buoy objects
-    * @param listB 
-    */
-    
-   void populateBuoyList(List <Buoy> listB)
+    /**
+     * Populates the Buoy Table with the passed in list of Buoy objects
+     *
+     * @param listB
+     */
+    void populateBuoyList(List<Buoy> listB)
     {
-        ArrayList <Buoy> arr = new ArrayList<>();
-      
-        if ( listB != null && listB.size() > 0)
+        ArrayList<Buoy> arr = new ArrayList<>();
+
+        if (listB != null && listB.size() > 0)
         {
             arr.addAll(listB);
-            
+
         }
         setBuoyList(arr);
-        if ( tableBuoys != null && tableBuoys.getRowCount() > 0 )
+        if (tableBuoys != null && tableBuoys.getRowCount() > 0)
         {
             tableBuoys.setRowSelectionInterval(0, 0);
+
         }
     }
 
-    void populateBuoyData(List <WeatherCondition> listWC)
+    void populateBuoyData(List<WeatherCondition> listWC)
     {
-        ArrayList <WeatherCondition> arr = new ArrayList<>();
-      
-        if ( listWC != null && listWC.size() > 0)
+        ArrayList<WeatherCondition> arr = new ArrayList<>();
+
+        if (listWC != null && listWC.size() > 0)
         {
             arr.addAll(listWC);
-            
+
         }
         setBuoyData(arr);
     }
-
-
-
-
+    
+    /**
+     * Set the table Cell Renderer
+     * @param table
+     * @param tableRowRenderer 
+     */
+    protected void setTableRowCellRenderer(JTable table, TableCellRenderer tableRowRenderer)
+    {
+        TableColumn column = null;
+        Enumeration tcols = table.getColumnModel().getColumns();
+        while (tcols.hasMoreElements())
+        {
+            column = (TableColumn) tcols.nextElement();
+            column.setCellRenderer(tableRowRenderer);
+        }
+    }    
 
 }

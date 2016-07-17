@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package buoy;
+package buoy.model;
 
+import buoy.common.BuoyException;
+import buoy.data.BuoyParserErrorHandler;
+import buoy.data.BuoyReader;
+import buoy.data.BuoyWriter;
 import it.sauronsoftware.feed4j.FeedParser;
 import it.sauronsoftware.feed4j.bean.Feed;
 import it.sauronsoftware.feed4j.bean.FeedHeader;
@@ -45,23 +49,38 @@ public class BuoyCatcher
     // List of favorite buoys
     private TreeMap<String, Buoy> myBuoys = new TreeMap<>();
 
-    public BuoyCatcher(String lat, String lng, int radius)
-    {
-        latitude = lat;
-        longitude = lng;
-        searchRadius = radius;
+    // Reference to a buoyWriter object;
+    private BuoyWriter buoyWriter;
 
-        buoySearchOptions = "?lat=" + latitude + "&lon=" + longitude + "&radius=" + searchRadius;
+    // Referenc to buoyReader object;
+    private BuoyReader buoyReader;
+
+    /**
+     * Constructor
+     *
+     * @param reader BuoyReader to read data saved from a previous session
+     * @param writer BuoyWriter to save session data
+     */
+    public BuoyCatcher(BuoyReader reader, BuoyWriter writer)
+    {
+        buoyReader = reader;
+        buoyWriter = writer;
+
     }
 
-    public void resetSearchOptions(String lat, String lng, int radius)
+    public void refreshBuoyList(String lat, String lng, int radius)
+    {
+        initSearchOptions(lat, lng, radius);
+        findBuoys();
+    }
+
+    public void initSearchOptions(String lat, String lng, int radius)
     {
         latitude = lat;
         longitude = lng;
         searchRadius = radius;
 
         buoySearchOptions = "?lat=" + latitude + "&lon=" + longitude + "&radius=" + searchRadius;
-        findBuoys();
     }
 
     public void findBuoys()
@@ -69,12 +88,10 @@ public class BuoyCatcher
         try
         {
             // Clear Old data if any
-            
-            allBuoys.clear();
-            myBuoys.clear();
-            
-            //Construct the URL of the RSS Feed
 
+            allBuoys.clear();
+
+            //Construct the URL of the RSS Feed
             URL url = new URL(NOAA_BUOY_RSS_URL + buoySearchOptions);
             Feed feed = FeedParser.parse(url);
 
@@ -84,7 +101,26 @@ public class BuoyCatcher
             for (int i = 0; i < numItems; i++)
             {
                 buoy = processBuoyItem(feed.getItem(i));
+                if ( myBuoys.containsKey(buoy.getStationID()))
+                {
+                    buoy.setFavorite(true);
+                }
             }
+            
+            // Mark favorite buoys not occuring in the current search as stale
+            List <Buoy> existingFavs = getFavoriteBuoys();
+            for (Buoy buoy1 : existingFavs)
+            {
+                if ( !allBuoys.containsKey(buoy1.getStationID()))
+                {
+                    buoy1.setStale(true);
+                }
+                else
+                {
+                    buoy1.setStale(false);
+                }
+            }
+            
         } catch (Exception ex)
         {
             Logger.getLogger(BuoyCatcher.class.getName()).log(Level.SEVERE, null, ex);
@@ -101,7 +137,7 @@ public class BuoyCatcher
         col = allBuoys.values();
 
         ArrayList<Buoy> listBuoys = new ArrayList<>(col);
-        Collections.sort(listBuoys, new Buoy.DistanceComparator());
+        Collections.sort(listBuoys, new Buoy.BuoyComparator());
 
         return listBuoys;
     }
@@ -117,7 +153,7 @@ public class BuoyCatcher
         col = myBuoys.values();
 
         ArrayList<Buoy> listBuoys = new ArrayList<>(col);
-        Collections.sort(listBuoys, new Buoy.DistanceComparator());
+        Collections.sort(listBuoys, new Buoy.BuoyComparator());
 
         return listBuoys;
     }
@@ -134,9 +170,11 @@ public class BuoyCatcher
         if (!bFav && myBuoys.containsValue(buoy))
         {
             myBuoys.remove(buoy.getStationID());
+            buoy.setFavorite(false);
         } else if (bFav)
         {
             myBuoys.put(buoy.getStationID(), buoy);
+            buoy.setFavorite(true);
         }
 
     }
@@ -180,6 +218,9 @@ public class BuoyCatcher
         return buoy;
     }
 
+    /**
+     * Used as debug in early development
+     */
     private void printBuoys()
     {
         List<Buoy> listBuoys = getAllBuoys();
@@ -192,6 +233,11 @@ public class BuoyCatcher
 
     }
 
+    /**
+     * Used for debugging in early development stage
+     *
+     * @param feed
+     */
     private void testPrint(Feed feed)
     {
 
@@ -225,6 +271,12 @@ public class BuoyCatcher
         }
     }
 
+    /**
+     * Handles the case where stations have same name. This happens for SHIPs
+     *
+     * @param buoy
+     * @return
+     */
     private Buoy makeUniqueBuoy(Buoy buoy)
     {
         if (buoy == null || buoy.getStationID() == null)
@@ -250,8 +302,95 @@ public class BuoyCatcher
         return null;
     }
 
+    /**
+     * Save Settings including user's favorite buoy stations Save Latest Search
+     * Location and
+     */
     public void saveData()
     {
-        
+        if (buoyWriter != null)
+        {
+            buoyWriter.saveBuoyCatcher(this);
+        }
+    }
+
+    /**
+     * Used to persist the search options from a BuoyCatcher session
+     *
+     * @return creates a CSV record of the search options to be saved across 
+     * user sessions.
+     */
+    public String toCSVRecord()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(BuoyWriter.BUOY_CATCHER_OPTIONS_RECORD_ID);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(latitude);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(longitude);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(searchRadius);
+
+        return sb.toString();
+    }
+
+    /**
+     * This method is called from the persistence file reader A buoy marked as
+     * favorite in a previous session is loaded back in as a favorite in a new
+     * session
+     *
+     * @param fav This is a favorite read from the persistence storage
+     */
+    public void addFavorite(Buoy fav)
+    {
+        Buoy buoy = makeUniqueBuoy(fav);
+        myBuoys.put(fav.getStationID(), buoy);
+    }
+
+    /**
+     * Called when the BuoyCatcher object is initialized.
+     * This method invokes methods on the BuoyReader object
+     * to get persisted data. 
+     * @param errorHandler An handler to handle input parsing errors
+     */
+    public void restoreSession(BuoyParserErrorHandler errorHandler)
+    {
+        if ( buoyReader != null )
+        {
+            buoyReader.readBuoyCatcherCSV(this, errorHandler);
+        }
+    }
+
+    /**
+     * Getter for Latitude
+     *
+     * @return the search latitude
+     */
+    public String getSearchLatitude()
+    {
+        return latitude;
+    }
+
+    /**
+     * Getter for Longitude
+     *
+     * @return the search Longitude
+     */
+    public String getSearchLongitude()
+    {
+        return longitude;
+    }
+    
+    /**
+     * 
+     * @return returns the search radius in nautical miles
+     */
+      public int getSearchRadius()
+    {
+        return searchRadius;
     }
 }

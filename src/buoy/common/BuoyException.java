@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package buoy;
+package buoy.common;
 
 /**
  *
@@ -11,7 +11,7 @@ package buoy;
  */
 public class BuoyException extends Exception
 {
-    BuoyException(String msg)
+    public BuoyException(String msg)
     {
         super(msg);
     }

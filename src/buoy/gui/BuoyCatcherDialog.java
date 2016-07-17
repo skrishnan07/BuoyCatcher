@@ -1,8 +1,14 @@
 package buoy.gui;
 
-import buoy.BuoyCatcher;
+import buoy.common.BuoyException;
+import buoy.data.BuoyParserErrorHandler;
+import buoy.data.BuoyReader;
+import buoy.data.BuoyWriter;
+import buoy.model.Buoy;
+import buoy.model.BuoyCatcher;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -13,17 +19,24 @@ import java.beans.PropertyChangeSupport;
  *
  * @author Shankar Krishnan
  */
-public class BuoyCatcherDialog extends javax.swing.JDialog
+public class BuoyCatcherDialog extends javax.swing.JDialog implements BuoyParserErrorHandler
 {
 
     private transient final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
+    // Define a client property identifier in use with a cell renderer
+    // to mark favorite buoys
+    public static final String CLIENT_PROPERTY_BUOY_LIST = "CLIENT_PROPERTY_BUOY_LIST";
+
+    // Singleton top level classes for the model and data compartments
     private BuoyCatcher buoyCatcher = null;
+    private BuoyReader buoyReader = null;
+    private BuoyWriter buoyWriter = null;
 
     /**
      * Add PropertyChangeListener.
      *
-     * @param listener
+     * @param listener listens for changes to data declared as properties
      */
     public void addPropertyChangeListener(PropertyChangeListener listener)
     {
@@ -33,7 +46,7 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     /**
      * Remove PropertyChangeListener.
      *
-     * @param listener
+     * @param listener removes previously registered listeners
      */
     public void removePropertyChangeListener(PropertyChangeListener listener)
     {
@@ -41,7 +54,9 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     }
 
     /**
-     * Creates new form BuoyCatcherDialog
+     *
+     * @param parent the Frame parent of the main BuoyCatcher dialog
+     * @param modal set to true for the BuoyCatcher application
      */
     public BuoyCatcherDialog(java.awt.Frame parent, boolean modal)
     {
@@ -99,9 +114,9 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
         jLabel3.setText("(NN.nnn N/S)");
 
         tabMain.addTab("All Buoys", allBuoyPanel);
-        tabMain.addTab("My Favorite Buoys", favoriteBuoysPanel);
+        tabMain.addTab("Favorite Buoys", favoriteBuoysPanel);
 
-        btnSearch.setText("Search");
+        btnSearch.setText("Refresh");
         btnSearch.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -147,18 +162,18 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tabMain, javax.swing.GroupLayout.DEFAULT_SIZE, 788, Short.MAX_VALUE)
+                    .addComponent(tabMain, javax.swing.GroupLayout.DEFAULT_SIZE, 802, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(jLabel2))
                         .addGap(18, 18, 18)
                         .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(tfLat, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(spinRadius))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE))
@@ -175,6 +190,9 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
                         .addComponent(btnClose)))
                 .addContainerGap())
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {btnSearch, tfLong});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
@@ -209,7 +227,7 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     {//GEN-HEADEREND:event_btnCloseActionPerformed
         dispose();
         cleanupAndExit();
-        
+
     }//GEN-LAST:event_btnCloseActionPerformed
 
     public void cleanupAndExit()
@@ -217,7 +235,7 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
         buoyCatcher.saveData();
         System.exit(0);
     }
-    
+
     private void tfLatActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_tfLatActionPerformed
     {//GEN-HEADEREND:event_tfLatActionPerformed
         // TODO add your handling code here:
@@ -233,8 +251,10 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
 
         int radius = ((Integer) spinRadius.getModel().
                 getValue());
-        buoyCatcher.resetSearchOptions(tfLat.getText(), tfLong.getText(), radius);
+        buoyCatcher.refreshBuoyList(tfLat.getText(), tfLong.getText(), radius);
         allBuoyPanel.populateBuoyList(buoyCatcher.getAllBuoys());
+        
+        favoriteBuoysPanel.populateBuoyList(new ArrayList<Buoy>());
         favoriteBuoysPanel.populateBuoyList(buoyCatcher.getFavoriteBuoys());
     }//GEN-LAST:event_btnSearchActionPerformed
 
@@ -279,26 +299,37 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
             public void run()
             {
                 BuoyCatcherDialog dialog = new BuoyCatcherDialog(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter()
-                {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e)
-                    {
-                        dialog.cleanupAndExit();
-                    }
-                });
-                int radius = ((Integer) dialog.spinRadius.getModel().
-                        getValue()).intValue();
-                BuoyCatcher buoyCatcher = new BuoyCatcher(dialog.tfLat.getText(),
-                        dialog.tfLong.getText(), radius);
-                buoyCatcher.findBuoys();
-
-                dialog.setBuoyCatcher(buoyCatcher);
-                dialog.setVisible(true);
-
+                dialog.initialize();
             }
 
         });
+    }
+
+    /**
+     * This function is the main entry point from the static main function
+     */
+    public void initialize()
+    {
+        buoyWriter = new BuoyWriter();
+        buoyReader = new BuoyReader();
+
+        addWindowListener(new java.awt.event.WindowAdapter()
+        {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e)
+            {
+                cleanupAndExit();
+            }
+        });
+
+        BuoyCatcher bc = new BuoyCatcher(buoyReader, buoyWriter);
+        bc.restoreSession(this);
+        bc.findBuoys();
+
+        // Load the BuoyCatcher data into the GUI
+        setBuoyCatcher(bc);
+
+        setVisible(true);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -322,6 +353,12 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     private void setBuoyCatcher(BuoyCatcher buoyCatcher)
     {
         this.buoyCatcher = buoyCatcher;
+
+        // Initilaize search options to data read from the file.
+        tfLat.setText(buoyCatcher.getSearchLatitude());
+        tfLong.setText(buoyCatcher.getSearchLongitude());
+        spinRadius.getModel().setValue(buoyCatcher.getSearchRadius());
+
         allBuoyPanel.setBuoyCatcher(buoyCatcher);
         favoriteBuoysPanel.setBuoyCatcher(buoyCatcher);
     }
@@ -329,5 +366,17 @@ public class BuoyCatcherDialog extends javax.swing.JDialog
     void markFavorite(boolean bFav)
     {
         favoriteBuoysPanel.populateBuoyList(buoyCatcher.getFavoriteBuoys());
+
+        // Need to cause a refresh of the all buoys screen
+        
+        allBuoyPanel.populateBuoyList(new ArrayList<Buoy>());
+        allBuoyPanel.populateBuoyList(buoyCatcher.getAllBuoys());
     }
+
+    @Override
+    public void handleParsingError(BuoyException error)
+    {
+        //TBD
+    }
+
 }

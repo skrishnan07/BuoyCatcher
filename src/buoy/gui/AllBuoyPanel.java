@@ -5,8 +5,8 @@
  */
 package buoy.gui;
 
-import buoy.Buoy;
-import buoy.BuoyCatcher;
+import buoy.model.Buoy;
+import buoy.model.BuoyCatcher;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +62,7 @@ public class AllBuoyPanel extends BuoyPanel
         buoyCatcher = catcher;
   
         List <Buoy>  newList = buoyCatcher.getAllBuoys();
+        
         populateBuoyList(newList);
         
     }

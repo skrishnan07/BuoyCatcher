@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package buoy;
+package buoy.model;
 
+import buoy.data.BuoyWriter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
@@ -80,7 +81,7 @@ public class WeatherCondition implements Serializable
     /**
      * Add PropertyChangeListener.
      *
-     * @param listener
+     * @param listener listens for changes to data members declared as properties
      */
     public void addPropertyChangeListener(PropertyChangeListener listener)
     {
@@ -90,7 +91,7 @@ public class WeatherCondition implements Serializable
     /**
      * Remove PropertyChangeListener.
      *
-     * @param listener
+     * @param listener Listener for property changes previously registered
      */
     public void removePropertyChangeListener(PropertyChangeListener listener)
     {
@@ -113,5 +114,24 @@ public class WeatherCondition implements Serializable
             }
         }
     }
+    
+    /**
+     * Serializes itself into a CSV string
+     * Constructs a CSV string as a name value pair
+     * @return A CSV version of the Weather Condition's data
+     */
+    public String toCSVRecord()
+    {
+        StringBuilder sb = new StringBuilder();
 
+        sb.append(BuoyWriter.BUOY_WEATHER_CONDITION_RECORD_ID);
+        sb.append(BuoyWriter.FS_WRITE);
+
+        sb.append(name);
+        sb.append(BuoyWriter.FS_WRITE);
+        
+        sb.append(value);
+        
+        return sb.toString();
+    }
 }

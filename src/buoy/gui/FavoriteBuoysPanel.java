@@ -5,8 +5,8 @@
  */
 package buoy.gui;
 
-import buoy.Buoy;
-import buoy.BuoyCatcher;
+import buoy.model.Buoy;
+import buoy.model.BuoyCatcher;
 import java.util.List;
 
 /**
